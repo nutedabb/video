@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HyperFrames Composition</title>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #000;
+      overflow: hidden;
+      font-family: 'Arial Black', Impact, sans-serif;
+    }
+
+    #stage {
+      position: relative;
+      width: 1080px;
+      height: 1920px;
+      background: #000;
+    }
+
+    .clip {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-shadow: 0 0 20px rgba(0,0,0,0.9);
+      box-sizing: border-box;
+      padding: 100px; /* Safe zone */
+    }
+
+    .pure-black {
+      background: #000;
+      z-index: 100;
+    }
+
+    .hook-caption {
+      color: #fff;
+      font-size: 80px;
+      text-align: center;
+      opacity: 0;
+      text-shadow: 0 0 40px rgba(255,255,255,0.5), 0 0 20px rgba(0,0,0,0.9);
+    }
+
+    /* Slam Number */
+    .slam-container {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+    }
+
+    .slam-number {
+      font-size: 120px;
+      color: #fff;
+      position: absolute;
+    }
+
+    .accent-bar-container {
+      position: absolute;
+      top: 150px; /* Below the top-left shrink */
+      left: 100px; /* Respect safe zone */
+      opacity: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .accent-label {
+      font-size: 36px;
+      color: #fff;
+      margin-bottom: 5px;
+    }
+
+    .accent-bar {
+      height: 6px;
+      width: 0; /* Animated later */
+      background: red; /* Default red */
+    }
+
+    .cost-container {
+      position: absolute;
+      bottom: 33%; /* bottom-third */
+      width: 100%;
+      text-align: center;
+      opacity: 0;
+      padding: 0 100px;
+      box-sizing: border-box;
+    }
+
+    .cost-number {
+      font-size: 80px;
+      font-weight: bold;
+    }
+
+    .cost-desc {
+      font-size: 34px;
+      color: #fff;
+      font-style: italic;
+      margin-top: 20px;
+      opacity: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .flash {
+      background: #fff;
+      opacity: 0;
+      z-index: 200;
+    }
+
+    .number-1-text {
+      font-size: 180px;
+      color: #FFD700;
+    }
+
+    .number-1-title {
+      font-size: 70px;
+      color: #FFD700;
+      opacity: 0;
+      text-align: center;
+      font-family: "Times New Roman", Times, serif; /* elegant gold serif-style */
+      position: absolute;
+      top: 40%;
+      width: 100%;
+      left: 0;
+    }
+
+    .number-1-cost {
+      font-size: 100px;
+      color: #FFD700;
+      opacity: 0;
+      text-align: center;
+      position: absolute;
+      top: 50%;
+      width: 100%;
+      left: 0;
+    }
+
+    .number-1-desc {
+      font-size: 38px;
+      color: #fff;
+      font-style: italic;
+      opacity: 0;
+      text-align: center;
+      position: absolute;
+      top: 60%;
+      width: 100%;
+      left: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .particles {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 50;
+    }
+
+    .particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #FFD700;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #FFD700;
+      animation: floatUp 3s linear infinite;
+    }
+
+    @keyframes floatUp {
+      0% { margin-top: 0; opacity: 0; }
+      20% { opacity: 0.8; }
+      80% { opacity: 0.8; }
+      100% { margin-top: -200px; opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div id="stage" data-composition-id="my-video" data-width="1080" data-height="1920">
+    <!-- Video background -->
+    <video class="clip" data-start="0" data-duration="96" data-track-index="0" src="Top5.mp4" loop muted playsinline></video>
+
+    <!-- [0:00-0:03] HOOK Black -->
+    <div class="clip pure-black" data-start="0" data-duration="3" data-track-index="1" id="hook-black"></div>
+
+    <!-- [0:03-0:11] Hook Caption -->
+    <div class="clip overlay" data-start="3" data-duration="8" data-track-index="2">
+      <div class="hook-caption" id="hook-caption">These projects cost more than most countries' GDP…</div>
+    </div>
+
+    <!-- #5 Entry [0:11-0:24] -->
+    <div class="clip overlay entry-group" data-start="11" data-duration="13" data-track-index="3" id="entry-5">
+      <div class="slam-container" id="slam-5-container">
+        <div class="slam-number" id="slam-5">#5</div>
+      </div>
+      <div class="accent-bar-container" id="bar-container-5">
+        <div class="accent-label">South-to-North Water Diversion · China</div>
+        <div class="accent-bar" id="bar-5" style="background: red;"></div>
+      </div>
+      <div class="cost-container" id="cost-container-5">
+        <div class="cost-number" id="cost-5" style="color: #00ff88;">$0 BILLION</div>
+        <div class="cost-desc" id="desc-5">Longest water transfer in history</div>
+      </div>
+    </div>
+
+    <!-- #4 Entry [0:25-0:41] -->
+    <div class="clip overlay entry-group" data-start="25" data-duration="16" data-track-index="4" id="entry-4">
+      <div class="slam-container" id="slam-4-container">
+        <div class="slam-number" id="slam-4" style="color: #FFD700;">#4</div>
+      </div>
+      <div class="accent-bar-container" id="bar-container-4">
+        <div class="accent-label">NEOM / THE LINE · Saudi Arabia</div>
+        <div class="accent-bar" id="bar-4" style="background: #1a1a2e;"></div>
+      </div>
+      <div class="cost-container" id="cost-container-4">
+        <div class="cost-number" id="cost-4" style="color: #FFD700;">$0 BILLION</div>
+        <div class="cost-desc" id="desc-4">A city with zero roads or cars</div>
+      </div>
+    </div>
+
+    <!-- #3 Entry [0:42-0:56] -->
+    <div class="clip overlay entry-group" data-start="42" data-duration="14" data-track-index="5" id="entry-3">
+      <div class="slam-container" id="slam-3-container">
+        <div class="slam-number" id="slam-3" style="color: #ffffff;">#3</div>
+      </div>
+      <div class="accent-bar-container" id="bar-container-3">
+        <div class="accent-label">International Space Station</div>
+        <div class="accent-bar" id="bar-3" style="background: #0d1b2a;"></div>
+      </div>
+      <div class="cost-container" id="cost-container-3">
+        <div class="cost-number" id="cost-3" style="color: #00cfff;">$0 BILLION</div>
+        <div class="cost-desc" id="desc-3">Built by 15 nations · In actual space</div>
+      </div>
+    </div>
+
+    <!-- #2 Entry [0:57-1:12] -->
+    <div class="clip overlay entry-group" data-start="57" data-duration="15" data-track-index="6" id="entry-2">
+      <div class="slam-container" id="slam-2-container">
+        <div class="slam-number" id="slam-2" style="color: #ff6b00; font-size: 140px;">#2</div>
+      </div>
+      <div class="accent-bar-container" id="bar-container-2">
+        <div class="accent-label">US Interstate Highway System</div>
+        <div class="accent-bar" id="bar-2" style="background: #1c1c1c;"></div>
+      </div>
+      <div class="cost-container" id="cost-container-2">
+        <div class="cost-number" id="cost-2" style="color: #ff6b00;">$0 BILLION</div>
+        <div class="cost-desc" id="desc-2">48,000 miles of road</div>
+      </div>
+    </div>
+
+    <!-- #1 Entry [1:12-1:36] -->
+    <div class="clip overlay" data-start="72" data-duration="24" data-track-index="7" id="entry-1">
+      <div class="slam-container" id="slam-1-container">
+        <div class="slam-number number-1-text" id="slam-1">🏆 #1</div>
+      </div>
+      <div class="flash" id="flash-1"></div>
+
+      <div class="number-1-title" id="title-1">NASA Apollo Program · USA</div>
+      <div class="number-1-cost" id="cost-1">$0 BILLION</div>
+      <div class="number-1-desc" id="desc-1">First humans on the Moon</div>
+
+      <div class="particles" id="particles-1">
+        <div class="particle" style="top: 80%; left: 20%; animation-delay: 0s;"></div>
+        <div class="particle" style="top: 85%; left: 30%; animation-delay: 0.5s;"></div>
+        <div class="particle" style="top: 75%; left: 40%; animation-delay: 1.2s;"></div>
+        <div class="particle" style="top: 90%; left: 50%; animation-delay: 0.2s;"></div>
+        <div class="particle" style="top: 82%; left: 60%; animation-delay: 0.8s;"></div>
+        <div class="particle" style="top: 78%; left: 70%; animation-delay: 1.5s;"></div>
+        <div class="particle" style="top: 88%; left: 80%; animation-delay: 0.3s;"></div>
+        <div class="particle" style="top: 85%; left: 90%; animation-delay: 1.0s;"></div>
+        <div class="particle" style="top: 95%; left: 25%; animation-delay: 0.7s;"></div>
+        <div class="particle" style="top: 92%; left: 75%; animation-delay: 1.1s;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    window.__timelines = window.__timelines || {};
+    window.__timelines["my-video"] = tl;
+
+    // Helper to format counter
+    function updateCounter(elementId, proxy, suffix=" BILLION") {
+      document.getElementById(elementId).innerText = "$" + Math.round(proxy.val) + suffix;
+    }
+
+    // [0:00-0:03] Hook - Black screen fades out at 0:01
+    // At t=0, opacity=1, at t=1 fades to 0
+    tl.fromTo("#hook-black", { opacity: 1 }, { opacity: 0, duration: 1, ease: "power1.inOut" }, 1);
+
+    // [0:03-0:11] Hook Caption - Fades up from bottom at 0:03, fades out at 0:11
+    tl.fromTo("#hook-caption",
+      { opacity: 0, marginTop: 50 },
+      { opacity: 1, marginTop: 0, duration: 1, ease: "power2.out" },
+    3);
+    tl.to("#hook-caption", { opacity: 0, duration: 1, ease: "power1.inOut" }, 10); // Ends at 11
+
+    // --- #5 Entry [0:11-0:24] ---
+    // SLAM #5 at 0:11
+    // Stays 0.5s then shrinks to 60px top-left
+    tl.fromTo("#slam-5",
+      { marginLeft: -1080, opacity: 1, fontSize: "120px" },
+      { marginLeft: 0, duration: 0.8, ease: "elastic.out(1, 0.5)" },
+    11);
+
+    // At 11.5s (0.5s after slam), shrink and move to top-left
+    // Center is 540x960, top-left with safe zone 100px.
+    // We use top/left properties of the text directly instead of transform.
+    // Actually slam-number is in flex container. Let's make the container absolute full width.
+    // Instead of using flex to move it, we can animate left/top properties if we set it absolute.
+    tl.fromTo("#slam-5-container",
+      { opacity: 1 }, { opacity: 1, duration: 0.01 }, 11);
+
+    // Animate the actual text element
+    tl.fromTo("#slam-5",
+      { left: "50%", top: "50%", marginLeft: -1080, marginTop: "-60px", fontSize: "120px" },
+      { marginLeft: "-35px", duration: 0.8, ease: "elastic.out(1, 0.5)" },
+    11);
+
+    tl.to("#slam-5",
+      { left: "100px", top: "100px", marginLeft: 0, marginTop: 0, fontSize: "60px", duration: 0.5, ease: "power2.inOut" },
+    11.5);
+
+    // Accent bar slides in at 11.5s
+    tl.fromTo("#bar-container-5", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 11.5);
+    tl.fromTo("#bar-5", { width: 0 }, { width: "100%", duration: 0.5, ease: "power2.out" }, 11.5);
+
+    // [0:13-0:24] Cost counter
+    // $0 -> $62 BILLION over 2s
+    let proxy5 = { val: 0 };
+    tl.fromTo("#cost-container-5", { opacity: 0, marginLeft: 0 }, { opacity: 1, duration: 0.5 }, 13);
+    tl.to(proxy5, {
+      val: 62,
+      duration: 2,
+      ease: "power1.out",
+      onUpdate: () => updateCounter("cost-5", proxy5)
+    }, 13);
+
+    // Below it: "Longest water transfer in history" fades in at 0:16
+    tl.fromTo("#desc-5", { opacity: 0 }, { opacity: 1, duration: 1 }, 16);
+
+    // Everything slides out at 0:24 with fast whoosh (translateX off screen right) -> use marginLeft instead of transform
+    tl.to("#entry-5", { marginLeft: 1080, duration: 0.5, ease: "power2.in" }, 23.5); // Start sliding out just before 24
+
+    // --- #4 Entry [0:25-0:41] ---
+    tl.fromTo("#entry-4", { marginLeft: 0, opacity: 1 }, { opacity: 1, duration: 0.01 }, 25);
+
+    tl.fromTo("#slam-4",
+      { left: "50%", top: "50%", marginLeft: -1080, marginTop: "-60px", fontSize: "120px" },
+      { marginLeft: "-35px", duration: 0.8, ease: "elastic.out(1, 0.5)" },
+    25);
+    tl.to("#slam-4",
+      { left: "100px", top: "100px", marginLeft: 0, marginTop: 0, fontSize: "60px", duration: 0.5, ease: "power2.inOut" },
+    25.5);
+
+    tl.fromTo("#bar-container-4", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 25.5);
+    tl.fromTo("#bar-4", { width: 0 }, { width: "100%", duration: 0.5, ease: "power2.out" }, 25.5);
+
+    let proxy4 = { val: 0 };
+    tl.fromTo("#cost-container-4", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 27);
+    tl.to(proxy4, {
+      val: 500,
+      duration: 2.5,
+      ease: "power1.out",
+      onUpdate: () => updateCounter("cost-4", proxy4)
+    }, 27);
+
+    tl.fromTo("#desc-4", { opacity: 0 }, { opacity: 1, duration: 1 }, 30);
+    tl.to("#entry-4", { marginLeft: 1080, duration: 0.5, ease: "power2.in" }, 40.5);
+
+    // --- #3 Entry [0:42-0:56] ---
+    tl.fromTo("#entry-3", { marginLeft: 0, opacity: 1 }, { opacity: 1, duration: 0.01 }, 42);
+
+    tl.fromTo("#slam-3",
+      { left: "50%", top: "50%", marginLeft: -1080, marginTop: "-60px", fontSize: "120px" },
+      { marginLeft: "-35px", duration: 0.8, ease: "elastic.out(1, 0.5)" },
+    42);
+    tl.to("#slam-3",
+      { left: "100px", top: "100px", marginLeft: 0, marginTop: 0, fontSize: "60px", duration: 0.5, ease: "power2.inOut" },
+    42.5);
+
+    tl.fromTo("#bar-container-3", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 42.5);
+    tl.fromTo("#bar-3", { width: 0 }, { width: "100%", duration: 0.5, ease: "power2.out" }, 42.5);
+
+    let proxy3 = { val: 0 };
+    tl.fromTo("#cost-container-3", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 44);
+    tl.to(proxy3, {
+      val: 150,
+      duration: 2,
+      ease: "power1.out",
+      onUpdate: () => updateCounter("cost-3", proxy3)
+    }, 44);
+
+    tl.fromTo("#desc-3", { opacity: 0 }, { opacity: 1, duration: 1 }, 47);
+    tl.to("#entry-3", { marginLeft: 1080, duration: 0.5, ease: "power2.in" }, 55.5);
+
+    // --- #2 Entry [0:57-1:12] ---
+    tl.fromTo("#entry-2", { marginLeft: 0, opacity: 1 }, { opacity: 1, duration: 0.01 }, 57);
+
+    tl.fromTo("#slam-2",
+      { left: "50%", top: "50%", marginLeft: -1080, marginTop: "-70px", fontSize: "140px" },
+      { marginLeft: "-35px", duration: 0.8, ease: "elastic.out(1, 0.5)" },
+    57);
+    tl.to("#slam-2",
+      { left: "100px", top: "100px", marginLeft: 0, marginTop: 0, fontSize: "60px", duration: 0.5, ease: "power2.inOut" },
+    57.5);
+
+    tl.fromTo("#bar-container-2", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 57.5);
+    tl.fromTo("#bar-2", { width: 0 }, { width: "100%", duration: 0.5, ease: "power2.out" }, 57.5);
+
+    let proxy2 = { val: 0 };
+    tl.fromTo("#cost-container-2", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 59);
+    tl.to(proxy2, {
+      val: 500,
+      duration: 2.5,
+      ease: "power1.out",
+      onUpdate: () => updateCounter("cost-2", proxy2, "+ BILLION")
+    }, 59);
+
+    tl.fromTo("#desc-2", { opacity: 0 }, { opacity: 1, duration: 1 }, 62);
+    tl.to("#entry-2", { marginLeft: 1080, duration: 0.5, ease: "power2.in" }, 71.5);
+
+    // --- #1 Entry [1:12-1:36] ---
+    tl.fromTo("#entry-1", { opacity: 1 }, { opacity: 1, duration: 0.01 }, 72);
+
+    // MASSIVE IMPACT slam from top
+    tl.fromTo("#slam-1",
+      { left: "50%", top: "50%", marginLeft: "-200px", marginTop: "-1080px" },
+      { marginTop: "-90px", duration: 1, ease: "bounce.out" },
+    72);
+
+    // Fix: Using elastic ease as requested "heavy elastic bounce"
+    tl.fromTo("#slam-1",
+      { left: "50%", top: "40%", marginLeft: "-250px", marginTop: "-1080px" },
+      { marginTop: "-90px", duration: 1, ease: "elastic.out(1, 0.3)" },
+    72);
+
+    // Screen flashes white for 3 frames (at 30fps = 0.1s)
+    // Wait until slam lands, assuming it hits around 72.3 (elastic out reaches target early)
+    tl.fromTo("#flash-1", { opacity: 0 }, { opacity: 1, duration: 0.05 }, 72.3);
+    tl.to("#flash-1", { opacity: 0, duration: 0.05 }, 72.35);
+
+    // 3 seconds PAUSE (72.3 to 75.3) - nothing moves
+    // 1:15 = 75s
+    // At 75s: "NASA Apollo Program · USA" fades in slowly (1.2s)
+    tl.fromTo("#title-1", { opacity: 0 }, { opacity: 1, duration: 1.2 }, 75);
+
+    // At 1:18 (78s): "$280 BILLION" counts up in gold, 100px.
+    let proxy1 = { val: 0 };
+    tl.fromTo("#cost-1", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 78);
+    tl.to(proxy1, {
+      val: 280,
+      duration: 2,
+      ease: "power1.out",
+      onUpdate: () => updateCounter("cost-1", proxy1)
+    }, 78);
+
+    // At 1:20 (80s): "First humans on the Moon" fades in below
+    tl.fromTo("#desc-1", { opacity: 0 }, { opacity: 1, duration: 1 }, 80);
+
+    // At 1:25 (85s): subtle golden particle shimmer effect
+    tl.fromTo("#particles-1", { opacity: 0 }, { opacity: 1, duration: 1 }, 85);
+
+    // Everything fades out gracefully at 1:34 (94s)
+    tl.to("#entry-1", { opacity: 0, duration: 1, ease: "power2.inOut" }, 94);
+
+  </script>
+</body>
+</html>
